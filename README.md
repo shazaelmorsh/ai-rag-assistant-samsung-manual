@@ -1,17 +1,19 @@
-# AI RAG Assistant
+# Samsung AI RAG Assistant
 
 ## Overview
-The AI RAG Assistant is a cutting-edge solution designed to enhance customer support and self-service capabilities for Samsung products. By leveraging Retrieval-Augmented Generation (RAG) technology, this application provides instant, accurate, and contextually relevant answers to customer inquiries using Samsung's official product manuals. 
+The Samsung AI RAG Assistant Project is designed to automate customer support for Samsung products. By leveraging Retrieval-Augmented Generation (RAG) technology, this application provides instant, accurate, and contextually relevant answers to customer inquiries using Samsung's official product manuals. 
 
-### Target Audience:
-- **End Users**: Samsung customers seeking quick answers to product-related questions.
-- **Support Teams**: Customer service representatives who can use the tool to enhance their efficiency.
-- **Business Partners**: Resellers and distributors looking to provide better support to their customers.
+## 🔧 Technologies
 
-## Features
-- **Text Chunking**: Breaks down large documents into manageable chunks for processing.
-- **Embedding and Uploading**: Converts text chunks into embeddings and uploads them to a model for retrieval.
-- **Model Integration**: Supports integration with various models, including the Llama 2 model.
+- **LangChain** – for managing the RAG pipeline, preprocessing and embeddings 
+- **Streamlit** – for building the user interface  
+- **Pinecone** – for vector database indexing and retrieval  
+
+## 📁 Repository Contents
+
+- **`text_chunking.py`** – Splits large product manuals into smaller chunks for processing  
+- **`embed_and_upload.py`** – Converts text chunks into embeddings and uploads them to Pinecone  
+
 
 ## Installation
 1. Clone the repository:
@@ -35,15 +37,15 @@ The AI RAG Assistant is a cutting-edge solution designed to enhance customer sup
      ```bash
      python src/embed_and_upload.py --input_path path/to/chunk --model_path path/to/model
      ```
+3. **Run Streamlit app**:
+    - ```bash
+        streamlit run app.py```
 
+add the pinecode and openai API key inside your .env
 ## Model
 The project includes a pre-trained Llama 2 model located in the `model/` directory. You can use this model for retrieval tasks.
 
-## Documentation
-For detailed documentation, refer to the Samsung manuals located in the `samsung_manuals/` directory. These manuals are used to answer client questions and provide accurate information.
-
-## Contributing
-Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) file for details on how to contribute to this project.
-
-## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+## Data Sources
+Place Samsung manuals in the samsung_manuals/ directory. These documents serve as the core knowledge base.
+You can download them from Samsung’s official support page:
+https://www.samsung.com/us/support/answer/ANS10001611/
