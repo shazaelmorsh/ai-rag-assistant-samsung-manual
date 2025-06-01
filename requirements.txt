@@ -1,0 +1,12 @@
+pinecone
+langchain
+langchain_core
+langchain_community
+llama-cpp-python
+langchain_text_splitters
+pdfminer.six
+tqdm
+streamlit
+python-dotenv
+openai
+langchain_pinecone
