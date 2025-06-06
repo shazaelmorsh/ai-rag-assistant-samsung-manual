@@ -7,7 +7,7 @@ to improve the quality of responses in a Samsung phone support context.
 from typing import List
 import re
 from langchain_core.prompts import PromptTemplate
-from langchain_openai import OpenAI
+from langchain_openai import ChatOpenAI
 
 class QueryTransformer:
     """A class for transforming and enhancing user queries about Samsung phones.
@@ -22,7 +22,15 @@ class QueryTransformer:
         Args:
             llm: Language model for query transformation (defaults to OpenAI with temperature=0)
         """
-        self.llm = llm or OpenAI(temperature=0)
+        self.llm = llm or ChatOpenAI(
+            temperature=0,
+            model="openai/gpt-4o-mini-2024-07-18",
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={
+                "HTTP-Referer": "https://github.com/shazaelmorsh/ai-rag-assistant-samsung-manual",
+                "X-Title": "Samsung AI RAG Assistant"
+            }
+        )
         
         self.expansion_prompt = PromptTemplate(
             template="""You are a Samsung phone support expert. Given a user's question, generate 3 alternative ways to ask the same question. 
