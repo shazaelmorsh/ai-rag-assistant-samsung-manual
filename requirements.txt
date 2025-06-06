@@ -1,12 +1,10 @@
-pinecone
-langchain
 langchain_core
 langchain_community
-llama-cpp-python
-langchain_text_splitters
-pdfminer.six
-tqdm
+openai
 streamlit
 python-dotenv
-openai
+tqdm
+pinecone-client
 langchain_pinecone
+pdfminer.six
+langchain_text_splitters
