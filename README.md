@@ -3,6 +3,8 @@
 ## Overview
 The Samsung AI RAG Assistant Project is designed to automate customer support for Samsung products. By leveraging Retrieval-Augmented Generation (RAG) technology, this application provides instant, accurate, and contextually relevant answers to customer inquiries using Samsung's official product manuals. 
 
+🔗 **[Try the Live Demo](https://customer-service-rag.streamlit.app/)**
+
 ## 🔧 Technologies
 
 - **LangChain** – for managing the RAG pipeline, preprocessing and embeddings 
@@ -47,5 +49,5 @@ The project includes a pre-trained Llama 2 model located in the `model/` directo
 
 ## Data Sources
 Place Samsung manuals in the samsung_manuals/ directory. These documents serve as the core knowledge base.
-You can download them from Samsung’s official support page:
+You can download them from Samsung's official support page:
 https://www.samsung.com/us/support/answer/ANS10001611/
