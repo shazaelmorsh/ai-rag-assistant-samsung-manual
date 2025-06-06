@@ -8,6 +8,9 @@ from langchain.chains import RetrievalQA
 from typing import List, Dict, Set
 from dotenv import load_dotenv
 from langchain_pinecone import PineconeVectorStore
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.chains import create_retrieval_chain
+from langchain_core.runnables import RunnablePassthrough
 
 # Load environment variables
 load_dotenv()
@@ -102,18 +105,17 @@ Question: {question}
 
 Answer: """
 
+# Create the prompt
 PROMPT = PromptTemplate(
     template=template,
     input_variables=["context", "question"]
 )
 
-qa_chain = RetrievalQA.from_chain_type(
-    llm=llm,
-    chain_type="stuff",
-    retriever=retriever,
-    chain_type_kwargs={
-        "prompt": PROMPT
-    }
+# Create the chain using LCEL
+qa_chain = (
+    {"context": retriever, "question": RunnablePassthrough()} 
+    | PROMPT 
+    | llm
 )
 
 # User input
@@ -122,13 +124,11 @@ user_question = st.text_input("Your question:")
 if user_question:
     with st.spinner("Finding answer..."):
         # Get the answer
-        response = qa_chain.invoke({
-            "query": user_question
-        })
+        response = qa_chain.invoke(user_question)
         
         # Display the answer
         st.write("### Answer")
-        st.write(response["result"])
+        st.write(response)
         
         # Show sources with enhanced metadata
         if st.checkbox("Show sources"):
