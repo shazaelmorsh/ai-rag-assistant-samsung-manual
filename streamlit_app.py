@@ -100,7 +100,7 @@ prompt = PromptTemplate.from_template("""You are a Samsung phone support expert.
 If you cannot find a specific answer in the context, say so - do not make up information.
 
 Context: {context}
-Question: {question}
+Question: {input}
 
 Answer the question in a clear and concise way. If relevant, mention specific Samsung features, settings, or menu locations.
 """)
@@ -112,10 +112,10 @@ user_question = st.text_input("Your question:")
 
 if user_question:
     with st.spinner("Finding answer..."):
-        response = qa_chain.invoke(user_question)
+        response = qa_chain.invoke({"input": user_question})
         
         st.write("### Answer")
-        st.write(response)
+        st.write(response["answer"])
         
         if st.checkbox("Show sources"):
             st.write("### Sources")
