@@ -1,3 +1,10 @@
+"""Streamlit web application for Samsung phone support using RAG technology.
+
+This application provides a user interface for querying Samsung product information
+using a combination of LlamaCpp embeddings, Pinecone vector store, and OpenAI for
+text generation.
+"""
+
 import os
 import streamlit as st
 from pinecone import Pinecone, Index
@@ -12,35 +19,36 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_core.runnables import RunnablePassthrough
 
-# Load environment variables
 load_dotenv()
 
-# Initialize Pinecone
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index = pc.Index("developer-quickstart-py")
 
-# Initialize Llama embeddings
 embeddings = LlamaCppEmbeddings(
     model_path="./models/llama-2-7b-chat.Q4_K_M.gguf",
     n_ctx=2048,
     n_batch=100
 )
 
-# Initialize OpenAI for text generation
 llm = OpenAI(temperature=0)
 
-# Create Pinecone retriever
 vectorstore = PineconeVectorStore(
     index=index,
     embedding=embeddings,
     text_key="text"
 )
 
-# Function to get unique metadata values
 def get_unique_metadata_values(field: str) -> List[str]:
-    # Query a sample of vectors to get metadata values
+    """Retrieve unique values for a specific metadata field from Pinecone vectors.
+    
+    Args:
+        field (str): Name of the metadata field to get unique values for
+        
+    Returns:
+        List[str]: Sorted list of unique non-empty values for the specified field
+    """
     vector_sample = index.query(
-        vector=[0] * 4096,  # Updated dimension for Llama
+        vector=[0] * 4096,
         top_k=100,
         include_metadata=True
     )
@@ -50,33 +58,27 @@ def get_unique_metadata_values(field: str) -> List[str]:
         if field in match['metadata']:
             value = match['metadata'][field]
             if isinstance(value, list):
-                # For fields that contain lists (like model_names)
                 all_values.update(value)
             else:
                 all_values.add(value)
     
     return sorted(list(filter(None, all_values)))
 
-# Streamlit UI
 st.title("Samsung Phone Assistant 📱")
 st.write("Ask any question about your Samsung phone!")
 
-# Sidebar filters
 st.sidebar.title("Filters")
 
-# Get unique values for filters
 models = get_unique_metadata_values("model_names")
 android_versions = get_unique_metadata_values("android_version")
 oneui_versions = get_unique_metadata_values("oneui_version")
 features = get_unique_metadata_values("features")
 
-# Filter selections
 selected_models = st.sidebar.multiselect("Select Phone Model(s)", models)
 selected_android = st.sidebar.selectbox("Android Version", ["All"] + android_versions)
 selected_oneui = st.sidebar.selectbox("One UI Version", ["All"] + oneui_versions)
 selected_features = st.sidebar.multiselect("Features", features)
 
-# Create metadata filter based on selections
 metadata_filter: Dict = {}
 if selected_models:
     metadata_filter["model_names"] = {"$in": selected_models}
@@ -87,7 +89,6 @@ if selected_oneui != "All":
 if selected_features:
     metadata_filter["features"] = {"$in": selected_features}
 
-# Update retriever with metadata filter
 retriever = vectorstore.as_retriever(
     search_kwargs={
         "k": 5,
@@ -95,42 +96,27 @@ retriever = vectorstore.as_retriever(
     }
 )
 
-# Create QA chain with enhanced prompt
-template = """You are a helpful Samsung phone support assistant. Use the following pieces of context from Samsung phone manuals to answer the question. If you don't know the answer, just say that you don't know. Don't try to make up an answer.
+prompt = PromptTemplate.from_template("""You are a Samsung phone support expert. Answer the following question based on the provided context.
+If you cannot find a specific answer in the context, say so - do not make up information.
 
-The information comes from the following context:
-{context}
-
+Context: {context}
 Question: {question}
 
-Answer: """
+Answer the question in a clear and concise way. If relevant, mention specific Samsung features, settings, or menu locations.
+""")
 
-# Create the prompt
-PROMPT = PromptTemplate(
-    template=template,
-    input_variables=["context", "question"]
-)
+document_chain = create_stuff_documents_chain(llm, prompt)
+qa_chain = create_retrieval_chain(retriever, document_chain)
 
-# Create the chain using LCEL
-qa_chain = (
-    {"context": retriever, "question": RunnablePassthrough()} 
-    | PROMPT 
-    | llm
-)
-
-# User input
 user_question = st.text_input("Your question:")
 
 if user_question:
     with st.spinner("Finding answer..."):
-        # Get the answer
         response = qa_chain.invoke(user_question)
         
-        # Display the answer
         st.write("### Answer")
         st.write(response)
         
-        # Show sources with enhanced metadata
         if st.checkbox("Show sources"):
             st.write("### Sources")
             docs = retriever.get_relevant_documents(user_question)

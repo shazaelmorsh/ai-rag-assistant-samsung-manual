@@ -1,13 +1,29 @@
+"""Module for transforming and enhancing user queries for Samsung phone support.
+
+This module provides functionality to normalize, expand, and specify user queries
+to improve the quality of responses in a Samsung phone support context.
+"""
+
 from typing import List
 import re
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import OpenAI
 
 class QueryTransformer:
+    """A class for transforming and enhancing user queries about Samsung phones.
+    
+    This class provides methods to normalize technical terms, generate alternative
+    phrasings, add technical specificity, and extract key concepts from queries.
+    """
+    
     def __init__(self, llm=None):
+        """Initialize QueryTransformer with optional language model.
+        
+        Args:
+            llm: Language model for query transformation (defaults to OpenAI with temperature=0)
+        """
         self.llm = llm or OpenAI(temperature=0)
         
-        # Prompt template for query expansion
         self.expansion_prompt = PromptTemplate(
             template="""You are a Samsung phone support expert. Given a user's question, generate 3 alternative ways to ask the same question. 
             
@@ -18,7 +34,6 @@ class QueryTransformer:
             input_variables=["question"]
         )
         
-        # Prompt template for query specification
         self.specification_prompt = PromptTemplate(
             template="""You are a Samsung phone support expert. Given a user's question, make it more specific by adding relevant technical details 
             and Samsung-specific terminology. Focus on:
@@ -35,8 +50,14 @@ class QueryTransformer:
         )
 
     def normalize_query(self, query: str) -> str:
-        """Normalize the query by standardizing technical terms and removing noise."""
-        # Standardize common variations
+        """Normalize technical terms and remove noise from the query.
+        
+        Args:
+            query (str): Original user query
+            
+        Returns:
+            str: Normalized query with standardized technical terms
+        """
         replacements = {
             r"(?i)one\s*ui": "One UI",
             r"(?i)samsung\s*account": "Samsung Account",
@@ -50,40 +71,57 @@ class QueryTransformer:
         normalized = query
         for pattern, replacement in replacements.items():
             normalized = re.sub(pattern, replacement, normalized)
-            
-        # Remove excessive punctuation and whitespace
+        
         normalized = re.sub(r'\s+', ' ', normalized)
         normalized = normalized.strip()
         
         return normalized
 
     def expand_query(self, query: str) -> List[str]:
-        """Generate alternative phrasings of the query."""
+        """Generate alternative phrasings of the query.
+        
+        Args:
+            query (str): Original user query
+            
+        Returns:
+            List[str]: List of alternative phrasings including the original query
+        """
         response = self.llm.invoke(
             self.expansion_prompt.format(question=query)
         )
-        # Extract questions from response
         alternatives = [q.strip() for q in response.strip().split('\n') if q.strip()]
-        # Add original query and return unique set
         all_queries = [query] + alternatives
-        return list(dict.fromkeys(all_queries))  # Remove duplicates while preserving order
+        return list(dict.fromkeys(all_queries))
 
     def specify_query(self, query: str) -> str:
-        """Make the query more specific with technical details."""
+        """Make the query more specific with technical details.
+        
+        Args:
+            query (str): Original user query
+            
+        Returns:
+            str: Enhanced query with added technical specificity
+        """
         response = self.llm.invoke(
             self.specification_prompt.format(question=query)
         )
         return response.strip()
 
     def extract_key_concepts(self, query: str) -> List[str]:
-        """Extract key technical concepts and features from the query."""
-        # Common Samsung phone-related concepts
+        """Extract key technical concepts and features from the query.
+        
+        Args:
+            query (str): User query to analyze
+            
+        Returns:
+            List[str]: List of unique technical concepts found in the query
+        """
         concept_patterns = [
-            r"(?i)(?:Android|One UI)\s*\d+(?:\.\d+)*",  # OS versions
-            r"(?i)Galaxy\s+[A-Za-z]\d+(?:\s+[A-Za-z]+)*",  # Phone models
-            r"(?i)(?:camera|battery|security|display|storage|network|wifi|bluetooth|fingerprint|face recognition|wireless charging|dex|s pen)\b",  # Features
-            r"(?i)(?:settings|menu|app|notification|widget)\b",  # UI elements
-            r"(?i)(?:backup|restore|update|sync|reset|pair|connect)\b"  # Actions
+            r"(?i)(?:Android|One UI)\s*\d+(?:\.\d+)*",
+            r"(?i)Galaxy\s+[A-Za-z]\d+(?:\s+[A-Za-z]+)*",
+            r"(?i)(?:camera|battery|security|display|storage|network|wifi|bluetooth|fingerprint|face recognition|wireless charging|dex|s pen)\b",
+            r"(?i)(?:settings|menu|app|notification|widget)\b",
+            r"(?i)(?:backup|restore|update|sync|reset|pair|connect)\b"
         ]
         
         concepts = []
@@ -91,10 +129,17 @@ class QueryTransformer:
             matches = re.finditer(pattern, query)
             concepts.extend(match.group(0) for match in matches)
         
-        return list(dict.fromkeys(concepts))  # Remove duplicates while preserving order
+        return list(dict.fromkeys(concepts))
 
     def transform_query(self, query: str) -> dict:
-        """Apply all query transformations and return results."""
+        """Apply all query transformations and return results.
+        
+        Args:
+            query (str): Original user query
+            
+        Returns:
+            dict: Dictionary containing all transformed versions of the query
+        """
         normalized = self.normalize_query(query)
         expanded = self.expand_query(normalized)
         specified = self.specify_query(normalized)
