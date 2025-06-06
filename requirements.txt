@@ -8,3 +8,4 @@ pinecone-client
 langchain_pinecone
 pdfminer.six
 langchain_text_splitters
+scikit-learn
